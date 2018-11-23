@@ -1,4 +1,4 @@
-package essSignPdf;
+package com.clt.essSignPdf;
 
 import com.itextpdf.awt.geom.Rectangle2D;
 import com.itextpdf.text.pdf.PdfReader;
@@ -22,8 +22,7 @@ public class GetLocation {
      * @return
      * @throws IOException
      */
-    public List<Location>         //获得某一页的关键字信息的集合
-    getKeyWords(PdfReader pdfReader, final int pageNum) throws IOException {
+    public static List<Location> getKeyWords(PdfReader pdfReader, final int pageNum) throws IOException {
         final List<Location> stringList = new ArrayList<Location>();
         try {
             PdfReaderContentParser pdfReaderContentParser = new PdfReaderContentParser(
@@ -53,7 +52,6 @@ public class GetLocation {
                 public void endTextBlock() {
 
                 }
-
                 @Override
                 public void renderImage(ImageRenderInfo imageRenderInfo) {
 
@@ -68,17 +66,17 @@ public class GetLocation {
 
     /**
      *  传入的pdf 文件和关键字 返回一个全文中包含所有关键字的信息集合
-     * @param pdfPath
+     * @param pdf
      * @param keyWord
      * @return
      */
-    public List<Location> getLastKeyWord(String pdfPath, String keyWord) {
+    public static List<Location> getLastKeyWord(byte[] pdf, String keyWord) {
         PdfReader reader = null;
         List<Location> fiList = new ArrayList<Location>();
 
         char[] a = keyWord.replace(" ","").toLowerCase().toCharArray();
         try {
-            reader = new PdfReader(pdfPath);
+            reader = new PdfReader(pdf);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -88,7 +86,7 @@ public class GetLocation {
         //循环每一页 获得所有的关键字
         for (int i = 0; i< num; i++) {
             try {
-                locations = this.getKeyWords(reader, i+1);
+                locations = getKeyWords(reader, i+1);
             } catch (IOException e) {
                 continue;
             }
@@ -119,7 +117,7 @@ public class GetLocation {
      * @param chars
      * @return
      */
-    List<Location> getLocationFromList(List<Location> list, char[] chars) {
+    public static List<Location> getLocationFromList(List<Location> list, char[] chars) {
         //定义一个容器集合 收集位置信息对象
         List<Location> list2 = new ArrayList<Location>();
         //获得关键字的长度

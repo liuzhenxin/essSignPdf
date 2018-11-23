@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="essSignPdf">
+    <output-path>$PROJECT_DIR$/out/artifacts/essSignPdf</output-path>
+    <root id="archive" name="essSignPdf.jar">
+      <element id="module-output" name="essSignPdf" />
+    </root>
+  </artifact>
+</component>

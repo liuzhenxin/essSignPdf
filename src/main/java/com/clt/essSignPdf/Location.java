@@ -1,4 +1,4 @@
-package essSignPdf;
+package com.clt.essSignPdf;
 
 /**
  * pdf文字位置信息的对象

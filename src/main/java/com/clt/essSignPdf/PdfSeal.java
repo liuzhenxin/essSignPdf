@@ -1,4 +1,4 @@
-package essSignPdf;
+package com.clt.essSignPdf;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
@@ -22,7 +22,8 @@ import java.util.UUID;
  */
 public class PdfSeal {
 
-    public String add(String pdfPath, String picPath, float width, float heigth, int pageNum, float x, float y, String pdxPath, String pwd) throws GeneralSecurityException, IOException, DocumentException {
+    public String add(String pdfPath, String picPath, float width, float heigth, int pageNum, float x,
+                      float y, String pdxPath, String pwd)  {
         String uuid = UUID.randomUUID().toString();
         Security.addProvider(new org.bouncycastle.
                 jce.provider.BouncyCastleProvider());
@@ -81,7 +82,4 @@ public class PdfSeal {
 
     }
 
-    public static void main(String[] args) throws DocumentException, GeneralSecurityException, IOException {
-        new PdfSeal().add("C:\\Users\\Crist\\Desktop\\te.pdf","C:\\Users\\Crist\\Desktop\\证书\\演示章.gif",100,100,1,100,100,"C:\\Users\\Crist\\Documents\\Tencent Files\\1366227053\\FileRecv\\newcert.pfx","111111");
-    }
 }
