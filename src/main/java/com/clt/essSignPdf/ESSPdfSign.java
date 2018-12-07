@@ -22,8 +22,8 @@ public class ESSPdfSign {
 	private byte[] sealImage;
 	private float sealX;
 	private float sealY;
-	private float imgWidth = 50;
-	private float imgHeigth = 50;
+	private float imgWidth = 150;
+	private float imgHeigth = 150;
 	private int sealPage;
 	private byte[] inputPdfFile;
 	private byte[] outputPdfFile;
@@ -77,7 +77,7 @@ public class ESSPdfSign {
 	 *通过文件名设置签章证书
 	 *参数：文件名
 	 **/
-	public boolean setSealCertByFilePath(String fileName,String certPwd) {
+	public boolean setSealCert(String fileName,String certPwd) {
 		if(checkValidate()){
 			if("".equals(fileName)){
 				return false;
@@ -91,10 +91,27 @@ public class ESSPdfSign {
 		}
 	}
 	/**
+	 *通过文件名设置签章证书
+	 *参数：文件名
+	 **/
+	public boolean setSealCert(File file,String certPwd) {
+		if(checkValidate()){
+			if(file==null){
+				return false;
+			}else{
+				sealCert = file;
+				sealCertPwd = certPwd;
+				return true;
+			}
+		}else{
+			return false;
+		}
+	}
+	/**
 	 *通过二进制数组设置签章证书
 	 *参数：二进制数组
 	 **/
-	public boolean setSealCertByByte(byte[] file,String certPwd) throws IOException {
+	public boolean setSealCert(byte[] file,String certPwd) throws IOException {
 		if(checkValidate()){
 			if(file!=null){
 				sealCert = byteToFile(file);
@@ -112,7 +129,7 @@ public class ESSPdfSign {
 	 *通过文件名设置签章图片
 	 *参数：文件名
 	 **/
-	public boolean setSealImageByFilePath(String fileName,float width,float heigth) throws IOException {
+	public boolean setSealImage(String fileName,float width,float heigth) throws IOException {
 		if("".equals(fileName)){
 			return false;
 		}else{
@@ -126,9 +143,25 @@ public class ESSPdfSign {
 	 *通过二进制数组设置签章图片
 	 *参数：二进制数组
 	 **/
-	public boolean setSealImageByByte(byte[] file) throws IOException {
+	public boolean setSealImage(File file,float width,float heigth) throws IOException {
+		if(file!=null){
+			sealImage = fileToByte(file);
+			imgWidth = width;
+			imgHeigth = heigth;
+			return true;
+		}else{
+			return false;
+		}
+	}
+	/**
+	 *通过二进制数组设置签章图片
+	 *参数：二进制数组
+	 **/
+	public boolean setSealImage(byte[] file,float width,float heigth) throws IOException {
 		if(file!=null){
 			sealImage = file;
+			imgWidth = width;
+			imgHeigth = heigth;
 			return true;
 		}else{
 			return false;
@@ -149,12 +182,25 @@ public class ESSPdfSign {
 			return true;
 		}
 	}
-
 	/**
-	 *
-	 * @param file
+	 * 设置签章pdf文档
+	 * @param file 文件
 	 * @return
 	 * @throws IOException
+	 */
+	public boolean setPdf(File file) throws IOException {
+		if(file==null){
+			return false;
+		}else{
+			inputPdfFile = fileToByte(file);
+			return true;
+		}
+	}
+	/**
+	 *设置待签pdf文档
+	 * @param file pdf文件的二进制数组
+	 * @return 是否成功
+	 * @throws IOException io异常
 	 */
 	public boolean setPdf(byte[] file) throws IOException {
 		if(file==null){
@@ -166,15 +212,15 @@ public class ESSPdfSign {
 	}
 
 	/**
-	 *
-	 * @return
-	 * @throws DocumentException
-	 * @throws GeneralSecurityException
-	 * @throws IOException
+	 * 对文档进行签名
+	 * @return 是否成功
+	 * @throws DocumentException itext文档异常
+	 * @throws GeneralSecurityException 安全异常
+	 * @throws IOException io异常
 	 */
 	public boolean signPdf() throws DocumentException, GeneralSecurityException, IOException {
 
-		if(sealCert!=null||sealImage!=null||sealX!=0||sealY!=0||sealPage!=0||inputPdfFile!=null||sealCertPwd!=null){
+		if(sealCert!=null||sealImage!=null||sealX!=0||sealY!=0||sealPage!=0||inputPdfFile!=null||isCheck||!"".equals(sealCertPwd)){
 			outputPdfFile = sign(inputPdfFile,sealImage,imgWidth,imgHeigth,sealPage,sealX,sealY,sealCert,sealCertPwd);
 			return true;
 		}
@@ -182,18 +228,15 @@ public class ESSPdfSign {
 	}
 
 	/**
-	 *
-	 * @param type
-	 * @return
-	 * @throws IOException
+	 * 输出签章后的文件
+	 * @return 	签章文件的二进制数组
 	 */
-	public Object outputToFile(int type) throws IOException {
-		switch (type){
-			case ESSRESULTTYPE_BYTE:
-				return outputPdfFile;
-			case ESSRESULTTYPE_FILE:
-				return byteToFile(outputPdfFile);
-		}
-		return null;
+	public byte[] savePdfAsByte()  {
+//		switch (type){
+//			case ESSRESULTTYPE_BYTE:
+//				return outputPdfFile;
+//		}
+//		return null;
+		return outputPdfFile;
 	}
 }
