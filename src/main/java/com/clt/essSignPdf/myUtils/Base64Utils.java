@@ -1,4 +1,4 @@
-package com.clt.essSignPdf;
+package com.clt.essSignPdf.myUtils;
 
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;

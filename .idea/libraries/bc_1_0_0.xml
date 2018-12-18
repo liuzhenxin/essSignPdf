@@ -4,9 +4,6 @@
       <root url="jar://$PROJECT_DIR$/lib/bc-1.0.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/bp-1.0.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/bv-1.0.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/itextpdf-5.5.12.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/json-20171018.jar!/" />
-      <root url="jar://$PROJECT_DIR$/lib/xmlworker-5.5.12.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

@@ -2,7 +2,7 @@ package com.clt.essSignPdf;
 
 public class SysVerify {
 
-	// 独立单位Id，有一级单位写一级单位id，没有则写起本身的单位Id
+	// 独立单位Id，有一级单位写一   级单位id，没有则写起本身的单位Id
 	private String independentId;
 	
 	private String unitName;
