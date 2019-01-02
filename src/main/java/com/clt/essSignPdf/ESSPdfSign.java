@@ -10,10 +10,10 @@ import java.util.List;
 
 import static com.clt.essSignPdf.ESSConstant.ESSRESULTTYPE_BYTE;
 import static com.clt.essSignPdf.ESSConstant.ESSRESULTTYPE_FILE;
-import static com.clt.essSignPdf.Utils.byteToFile;
-import static com.clt.essSignPdf.Utils.fileToByte;
 import static com.clt.essSignPdf.Utils.sign;
 import static com.clt.essSignPdf.GetLocation.getLastKeyWord;
+import static com.clt.essSignPdf.myUtils.fileUtils.byteToFile;
+import static com.clt.essSignPdf.myUtils.fileUtils.fileToByte;
 
 public class ESSPdfSign {
 	private boolean isCheck;
@@ -111,20 +111,20 @@ public class ESSPdfSign {
 	 *通过二进制数组设置签章证书
 	 *参数：二进制数组
 	 **/
-	public boolean setSealCert(byte[] file,String certPwd) throws IOException {
-		if(checkValidate()){
-			if(file!=null){
-				sealCert = byteToFile(file);
-				sealCertPwd = certPwd;
-				return true;
-			}else{
-				return false;
-			}
-		}else{
-			return false;
-		}
-
-	}
+//	public boolean setSealCert(byte[] file,String certPwd) throws IOException {
+//		if(checkValidate()){
+//			if(file!=null){
+//				sealCert = byteToFile(file);
+//				sealCertPwd = certPwd;
+//				return true;
+//			}else{
+//				return false;
+//			}
+//		}else{
+//			return false;
+//		}
+//
+//	}
 	/**
 	 *通过文件名设置签章图片
 	 *参数：文件名
@@ -220,8 +220,10 @@ public class ESSPdfSign {
 	 */
 	public boolean signPdf() throws DocumentException, GeneralSecurityException, IOException {
 
+	    OutputStream os = new FileOutputStream("");
+        byteToFile(inputPdfFile,os);
 		if(sealCert!=null||sealImage!=null||sealX!=0||sealY!=0||sealPage!=0||inputPdfFile!=null||isCheck||!"".equals(sealCertPwd)){
-			outputPdfFile = sign(inputPdfFile,sealImage,imgWidth,imgHeigth,sealPage,sealX,sealY,sealCert,sealCertPwd);
+			sign(inputPdfFile,sealImage,imgWidth,imgHeigth,sealPage,sealX,sealY,sealCert,sealCertPwd,os);
 			return true;
 		}
 		return false;

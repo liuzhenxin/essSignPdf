@@ -1,27 +1,26 @@
 package com.clt.essSignPdf.myUtils;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
+import static com.clt.essSignPdf.myUtils.PathUtils.getProjectRootPath;
 
 public class PropertiesUtils {
 
     public static Properties readProperties(String filePath) throws IOException {
         Properties prop = new Properties();
+        //获取当前项目根路径
+        String path = getProjectRootPath(PropertiesUtils.class);
+        //读取Properties 文件内容
         InputStream in = null;
-        //读取属性文件a.properties
-//        if(env.equals("local")){
-//            in = this.getClass().getResourceAsStream(proFilePath);
-//        }else{
-//            String filePath1 = System.getProperty("user.dir")+proFilePath;
-//            in = new BufferedInputStream(new FileInputStream(filePath1));
-//        }
-        in = new BufferedInputStream(new FileInputStream(filePath));
-        //加载属性列表
-        prop.load(new InputStreamReader(in, "gbk"));
-        in.close();
+        in = new BufferedInputStream(new FileInputStream(path+filePath));
+        prop.load(in);
         return prop;
+
+    }
+    public static String readProperties(String filePath,String key) throws IOException {
+        Properties prop = readProperties(filePath);
+        return prop.getProperty(key);
     }
 
     /**
@@ -32,7 +31,7 @@ public class PropertiesUtils {
      * @throws IOException
      */
     public static void writeProperties(String filePath,Properties prop,boolean b) throws IOException {
-        ///保存属性到b.properties文件
+        //保存属性到b.properties文件
         FileOutputStream oFile = new FileOutputStream(filePath, b);//true表示追加打开
         prop.store(oFile, "");
         oFile.close();

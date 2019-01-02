@@ -17,14 +17,14 @@ import java.security.cert.X509Certificate;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 import static com.clt.essSignPdf.myUtils.PathUtils.getProjectRootPath;
 import static com.clt.essSignPdf.myUtils.PropertiesUtils.readProperties;
 import static com.clt.essSignPdf.myUtils.PropertiesUtils.writeProperties;
+import static com.clt.essSignPdf.myUtils.fileUtils.fileToByte;
+import static com.clt.essSignPdf.myUtils.fileUtils.getFileList;
+import static com.clt.essSignPdf.myUtils.uuidUtil.getUUID;
 
 public class Utils {
 
@@ -54,26 +54,6 @@ public class Utils {
 		return false;  
     }
 
-    public static byte[] fileToByte(File file) throws IOException {
-        InputStream input = new FileInputStream(file);
-        byte[] byt = new byte[input.available()];
-        input.read(byt);
-        return byt;
-    }
-
-    /**
-     * 二进制数组转化file
-     * @param bytes 二进制数组
-     * @return
-     * @throws IOException
-     */
-    public static File byteToFile(byte[] bytes) throws IOException {
-        File file = new File("");
-        OutputStream output  = new FileOutputStream(file);
-        BufferedOutputStream bufferedOutput = new BufferedOutputStream(output);
-        bufferedOutput.write(bytes);
-        return file;
-    }
 
     /**
      * 对证书签章
@@ -91,36 +71,37 @@ public class Utils {
      * @throws DocumentException
      * @throws GeneralSecurityException
      */
-    public static byte[] sign(byte[] pdf, byte[] img, float imgWidth, float imgHeigth, int pageNum, float x, float y,
-                            File pfx, String pwd)
+    public static void sign(byte[] pdf, byte[] img, float imgWidth, float imgHeigth, int pageNum, float x, float y,
+                            File pfx, String pwd,OutputStream os)
             throws IOException, DocumentException, GeneralSecurityException {
-
+        //添加BC支持
         Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-
+        //初始化一个输入流
         InputStream inp = null;
 
         //初始化盖章的私钥和证书 和签名的图片信息
+        //图片pic
         Image pic = Image.getInstance(img);
-
+        //创建keyStore实例
         KeyStore ks = KeyStore.getInstance("PKCS12");
-
+        //将pfx文件读取成输入流
         FileInputStream in = new FileInputStream(pfx);
-
+        //keyStore加载证书
         ks.load(in, pwd.toCharArray());
-
+        //获取证书别名
         String alias = (String) ks.aliases().nextElement();
-
+        //获取pfx证书中的私钥数据
         PrivateKey pk = (PrivateKey) ks.getKey(alias, pwd.toCharArray());
-
+        //获取证书链
         Certificate[] chain = ks.getCertificateChain(alias);
 
         //相当于temp文件
 //        File file = new File("");
 
-        File signFile = new File("D:\\"+UUID.randomUUID().toString()+".pdf");
+//        File signFile = new File("D:\\"+UUID.randomUUID().toString()+".pdf");
 
-        FileOutputStream os = new FileOutputStream(signFile);
-
+//        FileOutputStream os = new FileOutputStream(signFile);
+        //读取输入的pdf文件
         PdfReader reader = new PdfReader(pdf);
 
         //注意此处的true 允许多次盖章，false则只能盖一个章。
@@ -131,26 +112,26 @@ public class Utils {
         PdfSignatureAppearance appearance = stamper.getSignatureAppearance();
 
         //规定签章的权限，包括三种，详见itext 5 api，这里是不允许任何形式的修改
+        //权限类型
         PdfSigLockDictionary dictionary = new PdfSigLockDictionary(PdfSigLockDictionary.LockPermissions.FORM_FILLING_AND_ANNOTATION);
         appearance.setFieldLockDict(dictionary);
+        //设置图片
         appearance.setImage(pic);
-        //此处的fieldName 每个文档只能有一个，不能重名
+        //设置签章的坐标和长宽和所在页码以及签章名称
+        //签章名称，每个文档只能有一个，不能重名。
         appearance.setVisibleSignature(new Rectangle(x, y, x + imgWidth, y + imgHeigth), pageNum,
-                "ESSPDFSign" + UUID.randomUUID().toString());
+                "ESSPDFSign" + getUUID());
         //设置文字为空 否则签章上将会有文字 影响外观
         appearance.setLayer2Text("");
 
-
-
-        ExternalSignature es = new PrivateKeySignature(pk,
-                "SHA-256", "BC");
+        ExternalSignature es = new PrivateKeySignature(pk, "SHA-256", "BC");
 
         ExternalDigest digest = new BouncyCastleDigest();
 
         MakeSignature.signDetached(appearance, digest, es,
                 chain, null, null, null, 0, MakeSignature.CryptoStandard.CMS);
 
-        os.close();
+//        os.close();
 
         stamper.close();
 
@@ -158,21 +139,16 @@ public class Utils {
 
         in.close();
 
-        byte[] result = fileToByte(signFile);
-
-        signFile.delete();
-
-        return result;
     }
 
     /**
      * 根据证书路径获取其中的公钥信息
-     * @param certName 证书路径
+     * @param cert 证书文件
      * @return 公钥信息
      */
-    public static PublicKey getPublicKey(String certName) throws IOException, CertificateException {
+    public static PublicKey getPublicKey(File cert) throws IOException, CertificateException {
         PublicKey publicKey = null;
-        InputStream inStream = new FileInputStream(new File(certName));
+        InputStream inStream = new FileInputStream(cert);
         //创建X509工厂类
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
         //创建证书对象
@@ -184,17 +160,124 @@ public class Utils {
 
     /**
      * 获取当前系统时,精确分
-     * 格式20171222121122	没有符号间隔
+     * 格式20171222121122 没有符号间隔
      * Delimiter：定界符
      * @return
      */
     public static String getCurrentTimeToMinuteNoDelimiter(){
-
         SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
-
         return df.format(new Date());
     }
 
+    /**
+     * 获取pdf文件中的数字签名信息
+     * @param pdfBytes pdf文件
+     * @return 数字签名信息列表
+     */
+    public static List<PdfSignInfo> getSignature(byte[] pdfBytes) throws IOException, GeneralSecurityException {
+        //添加BC库支持
+        BouncyCastleProvider provider = new BouncyCastleProvider();
+        Security.addProvider(provider);
+
+        List<PdfSignInfo> signInfoList = new ArrayList<>();
+
+        PdfReader reader = new PdfReader(pdfBytes);
+        AcroFields acroFields = reader.getAcroFields();
+        List<String> signedNames = acroFields.getSignatureNames();
+        for (String signedName : signedNames) {
+            PdfPKCS7 pdfPKCS7 = acroFields.verifySignature(signedName , provider.getName());
+            System.out.println("bc: " + provider.getName());
+            PdfSignInfo pdfSignInfo = new PdfSignInfo();
+            //签章名称
+            pdfSignInfo.setSignatureName(signedName);
+            //修订版本号
+            pdfSignInfo.setRevisionNumber(acroFields.getRevision(signedName));
+            //签章时间
+            pdfSignInfo.setSignDate(pdfPKCS7.getSignDate().getTime());
+            //摘要算法
+            pdfSignInfo.setDigestAlgorithm(pdfPKCS7.getDigestAlgorithm());
+
+            AcroFields.FieldPosition fieldPositions = acroFields.getFieldPositions(signedName).get(0);
+            //页码
+            pdfSignInfo.setPageNum(fieldPositions.page);
+            System.out.println("页码: " + fieldPositions.page);
+            //横坐标
+            pdfSignInfo.setX(fieldPositions.position.getLeft());
+            System.out.println("横坐标: " + fieldPositions.position.getLeft());
+            //纵坐标
+            pdfSignInfo.setY(fieldPositions.position.getBottom());
+            System.out.println("纵坐标: " + fieldPositions.position.getBottom());
+            pdfSignInfo.setWidth(fieldPositions.position.getWidth());
+            System.out.println("宽: " + fieldPositions.position.getWidth());
+            pdfSignInfo.setHeigth(fieldPositions.position.getHeight());
+            System.out.println("高: " + fieldPositions.position.getHeight());
+
+            pdfSignInfo.setReason(pdfPKCS7.getReason());
+            System.out.println("签章原因: " + pdfPKCS7.getReason());
+
+            pdfSignInfo.setEncryptionAlgorithm(pdfPKCS7.getEncryptionAlgorithm());
+            System.out.println("加密算法: " + pdfPKCS7.getEncryptionAlgorithm());
+
+            X509Certificate signCert = pdfPKCS7.getSigningCertificate();
+            pdfSignInfo.setSignerName(CertificateInfo.getSubjectFields(signCert).getField("CN"));
+            System.out.println("签章人名称: " + CertificateInfo.getSubjectFields(signCert).getField("CN"));
+
+            System.out.println("Signature name: " + signedName);
+            System.out.println("Signature covers whole document: " + acroFields.signatureCoversWholeDocument(signedName));
+
+            System.out.println("Subject: " + CertificateInfo.getSubjectFields(pdfPKCS7.getSigningCertificate()));
+            System.out.println("Document verifies: " + pdfPKCS7.verify());
+            System.out.println(pdfSignInfo);
+        }
+        return null;
+    }
+
+    /**
+     * 校验文档指定签名的证书是否可信机构颁发的
+     * @param pdfBytes pdf文件
+     * @param signatureName 签章名称
+     * @return 签章是否可信颁发机构颁发
+     */
+    public static boolean VerifySignature(byte[] pdfBytes,String signatureName)
+            throws IOException, NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException {
+        //添加BC支持
+        BouncyCastleProvider provider = new BouncyCastleProvider();
+        Security.addProvider(provider);
+        //先获取可信机构根证书文件夹
+        String ISSUER_CERT_PATH = readProperties("config.properties","ISSUER_CERT_PATH");
+        //获取可信机构公钥证书
+        List<File> certList = getFileList(new File(ISSUER_CERT_PATH));
+        //读取pdf文件
+        PdfReader reader = new PdfReader(pdfBytes);
+        //获取签章信息域
+        AcroFields acroFields = reader.getAcroFields();
+        //获取签章名称
+        List<String> signedNames = acroFields.getSignatureNames();
+        //取出需要校验的证书
+        X509Certificate VerifyCert = null;
+        //遍历签章
+        for (String signedName : signedNames) {
+            //如果当前signedName等于要验证的签章名称
+            if(signatureName.equals(signedName)){
+                //获取签章中的cer证书
+                PdfPKCS7 pdfPKCS7 = acroFields.verifySignature(signedName , provider.getName());
+                VerifyCert = pdfPKCS7.getSigningCertificate();
+            }
+        }
+        //根据颁发者公钥对签章证书验证
+        if(VerifyCert!=null &&certList!=null){
+            for(File f :certList){
+                try{
+                    //调用verify()验证是否可信机构颁发，如果通过则返回，如果不通过则跑出异常，并继续循环
+                    VerifyCert.verify(getPublicKey(f));
+                    return true;
+                } catch (SignatureException | CertificateException signatureException){
+                   //抛出异常，继续循环
+                }
+            }
+        }
+        return false;
+    }
     /**
      * 校验文档完整性
      * -2 : 验证过程中出现异常
@@ -202,7 +285,7 @@ public class Utils {
      * 0 :  所有签章验证通过，但签章后，文档被修改
      * 其他: 第 N 个章验证失败
      * */
-    public static final int VerifyDocument(byte[] sFilePath) throws GeneralSecurityException {
+    public static int VerifyDocument(byte[] sFilePath) throws GeneralSecurityException {
         int iRet = -2;
         Security.addProvider(new BouncyCastleProvider());
         PdfReader reader = null;
@@ -245,13 +328,16 @@ public class Utils {
         return iRet;
     }
 
-
-
+    /**
+     * 验证系统是否可用
+     * @return
+     * @throws IOException
+     */
     public static boolean verifySystem() throws IOException {
         //读取配置文件
         Properties prop = null;
         //获取当前项目根路径
-        String path = getProjectRootPath(demo.class);
+        String path = getProjectRootPath(Utils.class);
         try{
             //读取Properties 文件内容
             prop = readProperties(path+"ess.properties");
@@ -273,7 +359,7 @@ public class Utils {
                 String verifyServerAuth = VerifyServerAuthority.VerifyServerAuth(prop.getProperty("unitName"),
                         prop.getProperty("serverIp"), iSealMaxCount, prop.getProperty("jurProductCode"),
                         prop.getProperty("dueTime"), prop.getProperty("signValue"));
-                System.out.println(prop.getProperty("unitName"));
+//                System.out.println(prop.getProperty("unitName"));
                 if (verifyServerAuth == null || "".equals(verifyServerAuth)) {
                     // 验证失败
                     System.out.println("验证失败");
@@ -282,10 +368,9 @@ public class Utils {
                     prop.setProperty("verifyResult", verifyServerAuth);
 //                    sysVerify.setVerifyResult(verifyServerAuth);
                     //更新
-                    writeProperties(path+"b.properties",prop,false);
+                    writeProperties(path+ "config.properties",prop,false);
                 }
             }
-
         }else{
             System.out.println("读取文件为空");
         }

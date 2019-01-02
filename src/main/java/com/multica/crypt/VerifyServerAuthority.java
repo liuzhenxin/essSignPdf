@@ -96,11 +96,11 @@ public class VerifyServerAuthority {
 				
 			}
 			
-			if(!sServerIP.contains(address)){
-				
-				return "";
-				
-			}
+//			if(!sServerIP.contains(address)){
+//
+//				return "";
+//
+//			}
 			
 		} catch (UnknownHostException e1) {
 			

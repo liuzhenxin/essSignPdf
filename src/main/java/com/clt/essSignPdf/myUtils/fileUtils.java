@@ -1,6 +1,10 @@
 package com.clt.essSignPdf.myUtils;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
 public class fileUtils {
 
@@ -39,6 +43,44 @@ public class fileUtils {
         inputStream.read(bytes);
         //返回数据
         return bytes;
+    }
+
+    /**
+     * 获取指定路径下的所有文件列表
+     * @param dirFile 要查找的目录
+     * @return file 集合
+     */
+    public static List<File> getFileList(File dirFile) {
+        List<File> listFile = new ArrayList<>();
+        //如果不是目录文件，则直接返回
+        if (dirFile.isDirectory()) {
+            //获得文件夹下的文件列表，然后根据文件类型分别处理
+            File[] files = dirFile.listFiles();
+            if (null != files && files.length > 0) {
+                //根据时间排序
+                Arrays.sort(files, new Comparator<File>() {
+                    public int compare(File f1, File f2) {
+                        return (int) (f1.lastModified() - f2.lastModified());
+                    }
+
+                    public boolean equals(Object obj) {
+                        return true;
+                    }
+                });
+                for (File file : files) {
+                    //如果不是目录，直接添加
+                    if (!file.isDirectory()) {
+                        listFile.add(file);
+                    } else {
+                        //对于目录文件，递归调用
+                        listFile.addAll(getFileList(file));
+                    }
+                }
+            }
+        }else{
+            return null;
+        }
+        return listFile;
     }
 
 

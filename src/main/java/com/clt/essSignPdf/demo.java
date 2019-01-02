@@ -7,15 +7,44 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static com.clt.essSignPdf.Utils.VerifySignature;
+import static com.clt.essSignPdf.Utils.getSignature;
 import static com.clt.essSignPdf.Utils.verifySystem;
 import static com.clt.essSignPdf.myUtils.PathUtils.getProjectRootPath;
 import static com.clt.essSignPdf.myUtils.PropertiesUtils.*;
+import static com.clt.essSignPdf.myUtils.fileUtils.fileToByte;
 
 public class demo {
 
 
     public static void main(String[] args) throws Exception {
-        verifySystem();
+
+        Arrays.asList( "a", "b", "d" ).forEach( e -> System.out.println( e ) );
+
+//        verifySystem();
+
+//        List<PdfSignInfo> pdfSignInfoList = null;
+//
+//        pdfSignInfoList = getSignature(fileToByte(new File("E:\\test\\test1.pdf")));
+//
+//
+//        if (pdfSignInfoList != null) {
+//            for(PdfSignInfo p:pdfSignInfoList){
+//                System.out.println(p );
+//            }
+//        }
+//        System.out.println(pdfSignInfoList);
+
+        //验证签名代码
+//        String sealName = "ESSPDFSigne6c90b9f-ab59-4966-a0f7-d20543d425e0";
+//        boolean a = VerifySignature(fileToByte(new File("E:\\test\\test1.pdf")),sealName);
+//        System.out.println(a);
+//        String pa = getProjectRootPath(demo.class);
+//        System.out.println(pa+"config.properties");
+
+
+
+
 
 //        Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 //
